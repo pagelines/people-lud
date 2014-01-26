@@ -1,0 +1,72 @@
+/************************************classic-circle************************************/
+.ppl-container.template-classic-circle{
+	background: #017EB9;
+	background: @ppl-templatebg;
+	.ppl-item:hover{
+		.people-social{
+			opacity: 1;
+		}
+	}
+	.ppl-item-inner{
+		display: block;
+		margin: 0;
+		padding: 0;
+	}
+	.ppl-img{
+		img{
+		max-width: 65%;
+		border-radius: 50%;
+		margin: 0 auto;
+		display: block;
+		padding: 12%;
+		}
+	}
+	.ppl-position{
+		display: none;
+		width: 100%;
+		text-align: center;
+		text-transform: uppercase;
+		font-weight: 700;
+		font-size: 1.2em;
+		height: 40px;
+		margin-bottom: 2%;
+		letter-spacing: .1em;
+		color: white;
+		color:@ppl-position-color;
+	}
+	.people-social{
+		display: block;
+		opacity: 0;
+		font-size: 1em;
+		margin-top: 2%;
+		margin-bottom: 4%;
+		i{color: white;
+		color: @ppl-icon-color;}
+
+	}
+	.ppl-company{
+	}
+	.ppl-post_title{
+		display: block;
+		width: 100%;
+		text-align: center;
+		font-size: 1.2em;
+		font-weight: 300;
+		//height: 81px;
+		color: white;
+		color: @ppl-title-color;
+		&:after{
+			content: '';
+			position: absolute;
+			top: 660px;
+			left: 25%;
+			width: 50%;
+			height: 12px;
+			background: #fff;
+			background:@ppl-position-color;
+		}
+	}
+	.ppl-post_content{
+	}
+
+}//classic-circle end

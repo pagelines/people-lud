@@ -1,0 +1,142 @@
+/************************************GENERAL************************************/
+//these are default styles for People Lud
+//Highly recomended not to change
+.ppl-container {
+	background: @ppl-templatebg;
+	position: relative;
+	height: 120px;
+	overflow: hidden;
+	ul{
+		opacity: 0;
+		list-style-type: none;
+	}
+	.ppl-item{
+		float: left;
+		display:block;
+		.box-sizing(border-box);
+	}
+	.ppl-item-inner{background:@ppl-singlebg;}
+	.ppl-post_title{color: @ppl-title-color;}
+	.ppl-position{color: @ppl-position-color;}
+	.ppl-company{color: @ppl-company-color;}
+	.ppl-custom_text1{color: @ppl-custom1-color;}
+	.ppl-custom_text2{color: @ppl-custom2-color;}
+	.ppl-post_content{color:@ppl-content-color;}
+	.ppl-group{color: @ppl-groupbg;}
+	//.fredslider li{width: 33%;}
+	.in-grid{	margin: 0 auto; li{width: 33%;}}
+	.masonry-brick{
+		margin: 8px 0;
+		overflow: hidden;
+		display:block;
+	}
+	.people-social{
+		//width: 100%;
+		text-align: center;
+		a{
+			color: @ppl-icon-color;
+			&:hover{
+				color: @ppl-iconhover-color;
+				.transition(color .2s ease);
+			}
+		}
+	}
+}
+/****************************options style*****************************/
+form[data-sid="people-lud"], form[data-scope="people-lud"]{
+	.opt{
+		background: #2f2f2f !important;
+		min-height: 280px;
+	}
+	#master_template_settings.opt{
+		background: #017EB9 !important;
+
+	}
+	label{
+		.fix;
+		color:white !important;
+		font-size:1em !important;
+		.btn.btn-mini{
+			float:right;
+		}
+	}
+	.opt-name{
+		font-size: 1.3em !important;
+		background: white !important;
+		box-shadow: 0 0 0 !important;
+		color:@blue !important;
+	}
+	select, textarea, input{
+		margin-bottom: 10px;
+	}
+	.check-standard{display: block !important;}
+    	.check-flip{display: none !important;}
+    	label[for="opt_set_info"],input[id="opt_set_info"],label[for="grid_selector"],input[id="grid_selector"]{
+		display:none !important;
+	}
+}
+/************************************DEFAULT TEMPLATE************************************/
+/************************************default************************************/
+/************************************default************************************/
+.ppl-container.template-default{
+	.ppl-item{
+	}
+	.ppl-item-inner{
+
+	}
+	.ppl-img{
+		text-align: center;
+		//margin-bottom: px;
+	}
+
+	#ppl-group-1{
+		padding: 8px;
+		.box-sizing (border-box);
+		text-align: center;
+		width: 100%;
+	}
+	.ppl-post_title{
+		font-size: 1.4em;
+	}
+	.ppl-position{
+		font-size: 1.1em;
+
+	}
+	.ppl-item .people-social{
+		background: @ppl-singlebg;
+		position: relative;
+		padding-bottom: 8px;
+		text-align: center;
+		.box-sizing (border-box);
+	}
+
+
+	&.default-c2{
+		.ppl-item-inner{
+		}
+		.ppl-img{
+		}
+		.ppl-position{
+		}
+		.ppl-company{
+		}
+		.ppl-post_title{
+		}
+		.ppl-post_content{
+		}
+	}
+	&.default-c3{
+		.ppl-item-inner{
+		}
+		.ppl-img{
+		}
+		.ppl-position{
+		}
+		.ppl-company{
+		}
+		.ppl-post_title{
+		}
+		.ppl-post_content{
+		}
+	}
+}//default end
