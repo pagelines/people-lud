@@ -42,3 +42,16 @@
         #cboxNext:hover{background-position:bottom right;}
         #cboxClose{position:absolute; top:5px; right:5px; display:block; background:url(images/controls.png) no-repeat top center; width:38px; height:19px; text-indent:-9999px;}
         #cboxClose:hover{background-position:bottom center;}
+
+               /*****************************options style*****************************/
+form[data-sid="people-lud"] .opt, form[data-scope="people-lud"] .opt{background: #2f2f2f !important;}
+form[data-sid="people-lud"] label, form[data-scope="people-lud"] label{color:white !important; font-size:1em !important;}
+form[data-sid="people-lud"] label .btn.btn-mini, form[data-scope="people-lud"] label .btn.btn-mini {float: right;}
+form[data-sid="people-lud"] .opt-name, form[data-scope="people-lud"] .opt-name{font-size: 1.3em !important; background: white !important; box-shadow: 0 0 0 !important; color:#017EB9 !important;}
+form[data-sid="people-lud"] select, form[data-scope="people-lud"] select{margin-bottom: 10px;}
+form[data-sid="people-lud"] input, form[data-scope="people-lud"] input{margin-bottom: 10px;}
+form[data-sid="people-lud"] textarea, form[data-scope="people-lud"] textarea{margin-bottom: 10px;}
+form[data-sid="people-lud"] #master_template_settings.opt, form[data-sid="people-lud"] #master_template_settings.opt{background: #017EB9 !important;}
+form[data-sid="people-lud"] .check-standard, form[data-scope="people-lud"] .check-standard{display: block !important;}
+form[data-sid="people-lud"] .check-flip, form[data-scope="people-lud"] .check-flip{display: none !important;}
+label[for="opt_set_info"],input[id="opt_set_info"],label[for="grid_selector"],select[id="grid_selector"]{display:none !important;}

@@ -1,6 +1,7 @@
 /*
-ver: 0.7
+ver: 1.1
 */
+//TODO: ludResponsive - prebaciti responsiveClasses i ItemStyle u $(document).ready(...); u jednu varijablu koja se zove u section_head-u
 jQuery(window).load(function(){
 	var ludLoop = function(selectors, options){
 		this.selectors = selectors;
@@ -9,7 +10,9 @@ jQuery(window).load(function(){
 	ludLoop.prototype = {
 		defaults: {
 			enable_animation: false,
-			use_link: false
+			use_link: false,
+			defFredWidth: 200,
+			fredWidth: 300
 		},
 		init: function() {
 			self = this;
@@ -22,19 +25,23 @@ jQuery(window).load(function(){
 		masonryGrid: function(){
 			if(jQuery.isFunction(jQuery.fn.masonry)){
 				self.itemHeight();
-				self.selectors.wraper.masonry({
+				masonryObj = {
 					itemSelector: self.selectors.ludItem.selector,
 					isAnimated: true,
 					isFitWidth: true,
-					columnWidth: self.options.itemWidth + 1
-				});
+					columnWidth: self.options.itemWidth
+				};
+				if(self.options.numslides === 0 ) {
+					masonryObj.isFitWidth = false;
+				}
+				self.selectors.wraper.masonry(masonryObj);
 			}
 		},
 		fredGrid: function(){
 			if(jQuery.isFunction(jQuery.fn.carouFredSel)){
 				//fred item width
-				defItemWidth 	= 465;
-				fredWidth = (600 > self.selectors.container.width()) ? 600 : defItemWidth;
+				defItemWidth 	= self.options.defFredWidth;
+				fredWidth = (self.options.fredWidth > self.selectors.container.width()) ? self.options.fredWidth : defItemWidth;
 				//fredobj for section loop
 				defFredObj = {
 					responsive: true,
@@ -65,18 +72,18 @@ jQuery(window).load(function(){
 				if(self.options.pager === true) {
 					defFredObj.pagination = self.selectors.pager.selector;
 					self.selectors.pager.show(0);
-					self.selectors.next.css('margin-top', '-=20px');
-					self.selectors.prev.css('margin-top', '-=20px');
 				}
 				//controls (arrows)
 				if(self.options.controls === true) {
 					defFredObj.next.button = self.selectors.next;
 					defFredObj.prev.button = self.selectors.prev;
+					self.selectors.next.css('margin-top', '-=20px');
+					self.selectors.prev.css('margin-top', '-=20px');
 					self.selectors.next.show(0);
 					self.selectors.prev.show(0);
 				}
 				//initiate fred
-				self.selectors.wraper.delay(2000, 'carouFredSel').carouFredSel(defFredObj);
+				self.selectors.wraper.delay(800, 'carouFredSel').carouFredSel(defFredObj);
 				self.itemHeight();
 				self.selectors.wraper.trigger('updateSizes');
 			}

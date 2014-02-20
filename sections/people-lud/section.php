@@ -2,7 +2,7 @@
 /*
 	Section: People Lud
 	Author: bestrag
-	Version: 1.0
+	Version: 1.1
 	Author URI: http://bestrag.net
 	Demo: http://bestrag.net/people_lud/demo
 	Description: Custom Post Type Section for displaying People/Teams/Artists
@@ -25,7 +25,7 @@ class PeopleLud extends PageLinesSection {
 	/* section_styles */
 	function section_scripts() {
 		wp_enqueue_script( 'jquery-masonry', array( 'jquery' ) );
-		wp_enqueue_script( 'jquery-colorbox', $this->base_url.'/jquery.colorbox-min.js', array( 'jquery' ), true );
+//		wp_enqueue_script( 'jquery-colorbox', $this->base_url.'/jquery.colorbox-min.js', array( 'jquery' ), true );
 		wp_enqueue_script( 'jquery-ludloop', $this->base_url.'/jquery.ludloop.js', array( 'jquery' ), true );
 	}
 
@@ -46,6 +46,9 @@ class PeopleLud extends PageLinesSection {
 		$this->lud_opts['numslides']	= ( $this->opt( 'col_num' ) )  ? intval($this->opt( 'col_num' )) : 1;
 		$this->lud_opts['slide_gutter']	= ( $this->opt( 'slide_gutter' ) ) ?  intval($this->opt( 'slide_gutter' ) ).'px' : '0' ;
 		$this->lud_opts['equal_height']		= ( $this->opt( 'equal_height') ) ? false : true ;
+		//carousell single item min width - needed in ludloop.js
+		$this->lud_opts['defFredWidth']	= 200;
+		$this->lud_opts['fredWidth']		= 300;
 		//all you need is json
 		$lud_opts	= json_encode($this->lud_opts);
 		?>
@@ -63,7 +66,7 @@ class PeopleLud extends PageLinesSection {
 					'sectionPrefix'	: sectionPrefix,
 					'sectionClone'	: sectionClone,
 					'container'	: jQuery('.'+sectionPrefix+'-container', sectionClone),
-					'wraper'		: jQuery('.'+sectionPrefix+'-wraper', sectionClone),
+					'wraper'	: jQuery('.'+sectionPrefix+'-wraper', sectionClone),
 					'ludItem'	: jQuery('.'+sectionPrefix+'-item', sectionClone),
 					'inner'		: jQuery('.'+sectionPrefix+'-item-inner', sectionClone)
 				};
@@ -73,7 +76,6 @@ class PeopleLud extends PageLinesSection {
 				ItemStyle();
 				responsiveClasses();
 				//functions
-				console.log(ludOpts[cloneID]);
 				function ItemStyle(){
 					ludSelectors[cloneID]['ludItem'].css({
 						'padding-left'	: ludOpts[cloneID]['slide_gutter'],
@@ -97,7 +99,7 @@ class PeopleLud extends PageLinesSection {
 			                    ludSelectors[cloneID]['ludItem'].css({
 			                        'width' :   calcItemWidth
 			                    });
-			                    ludOpts[cloneID]['itemWidth'] = calcItemWidth;
+			                   ludOpts[cloneID]['itemWidth'] = Math.ceil(calcItemWidth);
 			                    if (384 > calcItemWidth) return ludSelectors[cloneID]['container'].addClass(ludOpts[cloneID]['template_name'] + '-c2');
 			                    if (245 > calcItemWidth) return ludSelectors[cloneID]['container'].addClass(ludOpts[cloneID]['template_name'] + '-c3');
 			                }
@@ -126,8 +128,12 @@ class PeopleLud extends PageLinesSection {
 		$this->meta['set'] = wp_parse_args( $this->temp_meta, $this->meta['set'] );
 		//params
 		$template_name = ( $this->opt( 'template_name' ) ) ? $this->opt( 'template_name' ) : $this->default_template;
-//		$use_link	= ( $this->opt('use_link') ) ? $this->opt('use_link') : false;
 		$use_link	= false;
+		//$use_link		= ( $this->opt('use_link') ) ? $this->opt('use_link') : false;
+		$link_elems		= array('img');
+		$a_open		= '';
+		$a_close		= '';
+		//$use_link	= false;
 		$animation	= 'in-grid';
 		//social
 		$use_social		= ( $this->opt('use_social') ) ? false : true;
@@ -168,29 +174,10 @@ class PeopleLud extends PageLinesSection {
 		//collect all posts
 		$all_posts	= '';
 		if($query->have_posts()){
-			$def_array = array(
-				'name'		=> array(''),
-				'position'	=> array(''),
-				'company'	=> array(''),
-				'custom_text1'	=> array(''),
-				'custom_text2'	=> array(''),
-				'img'		=> array(''),
-				'demo'		=> array(''),
-				'facebook'	=> array(''),
-				'twitter'	=> array(''),
-				'google'	=> array(''),
-				'linkedin'	=> array(''),
-				'github'		=> array(''),
-				'instagram'	=> array(''),
-				'post_title'	=> array(''),
-				'post_content'	=> array(''),
-				'post_url'	=> array('')
-			);
 			while($query->have_posts()){
 				$query->the_post();
 				//get post data for every post
 				$temp_data = get_post_meta( get_the_ID() );
-				$temp_data = array_merge($def_array, $temp_data);
 				//update
 				$temp_data['post_title'][0]	= get_the_title( );
 				$temp_data['post_content'][0]	= get_the_content( );
@@ -200,17 +187,27 @@ class PeopleLud extends PageLinesSection {
 				}
 				//collects all posts data in one array
 				$post_data[] = $temp_data;
+				//create link to single post
+				if(in_array($use_link, array('link', 'colorbox'))) {
+					$link_index = $index + 1;
+					$a_open = sprintf('<a href="%1$s" class="%2$s-link %2$s-link-%3$s" data-proj-id="%3$s">', $post_data[$index]['post_url'][0], $this->prefix, $link_index );
+					$a_close = '</a>';
+				}
 				//render elements
+				$group_index = 1;
 				$all_elems = '';
 				foreach ($template_json as $key => $value) {
 					$key++;
-					//template - if array in array
+					//template json - if array in array
 					if(is_array($value)){
-						$group_index = 1;
 						$group_elems = '';
 						//elements
 						foreach ($value as $i => $val) {
-							$group_elem = sprintf('<div class="%1$s-%2$s">%3$s</div>',$this->prefix, $val, $post_data[$index][$val][0] );
+							//annoying wp notice fix
+							if(!array_key_exists($val, $post_data[$index])) $post_data[$index][$val][0] = '';
+							//add link only to imgs and title
+							if($a_close && in_array($val, $link_elems)){$a_start = $a_open; $a_end = $a_close;}else{$a_start = ''; $a_end = '';}
+							$group_elem = sprintf('%4$s<div class="%1$s-%2$s">%3$s</div>%5$s',$this->prefix, $val, $post_data[$index][$val][0], $a_start, $a_end );
 							$group_elems .= $group_elem;
 						}
 						//wrap elements
@@ -218,7 +215,11 @@ class PeopleLud extends PageLinesSection {
 						$all_elems .= $group;
 						$group_index++;
 					}else{
-						$elem = sprintf('<div class="%1$s-%2$s">%3$s</div>',$this->prefix, $value, $post_data[$index][$value][0] );
+						//and again
+						if(!array_key_exists($value, $post_data[$index])) $post_data[$index][$value][0] = '';
+						//add link only to imgs and title
+						if($a_close && in_array($value, $link_elems)){$a_start = $a_open; $a_end = $a_close;}else{$a_start = ''; $a_end = '';}
+						$elem = sprintf('%4$s<div class="%1$s-%2$s">%3$s</div>%5$s',$this->prefix, $value, $post_data[$index][$value][0], $a_start, $a_end );
 						$all_elems .= $elem;
 					}
 				}
@@ -235,17 +236,9 @@ class PeopleLud extends PageLinesSection {
 					$instagram	= ($post_data[$index]['instagram'][0]) ? '<a href="https://instagram.com/'.$post_data[$index]['instagram'][0].'" class="ppl-single-link ppl-instagram-link" target="_blank"><i class="'.$social_instagram_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
 					$social		= sprintf('<div class="lud-social %1$s-social">%2$s%3$s%4$s%5$s%6$s%7$s</div>',$this->multiple, $facebook,$twitter,$google,$linkedin,$github, $instagram);
 				}
-				//add link to item
-				$link_index = $index + 1;
-				$a_open  = '';
-				$a_close  = '';
-				if($use_link === 'colorbox') {
-					$a_open = sprintf('<a href="%1$s" class="%2$s-link %2$s-link-%3$s" data-ppl-id="%3$s">', $post_data[$index]['post_url'][0], $this->prefix, $link_index );
-					$a_close = '</a>';
-				}
 				//wrap elements in <li>
 				$index++;
-				$all_posts .= sprintf('<li class="%1$s-item %1$s-item-%2$s">%4$s<div id="%1$s-inner-%2$s" class="%1$s-item-inner">%3$s</div>%5$s%6$s</li>', $this->prefix, $index, $all_elems, $a_open, $a_close, $social);
+				$all_posts .= sprintf('<li class="%1$s-item %1$s-item-%2$s"><div id="%1$s-inner-%2$s" class="%1$s-item-inner">%3$s</div>%4$s</li>', $this->prefix, $index, $all_elems, $social);
 			}
 		}
 		wp_reset_postdata();
@@ -513,19 +506,19 @@ class PeopleLud extends PageLinesSection {
 						'key'           => $this->prefix.'-templatebg',
 						'type'       => 'color',
 						'label' => __( 'Container Background', 'pagelines' ),
-						'default'	=> '#',
+						'default'	=> '',
 					),
 					array(
 						'key'           => $this->prefix.'-singlebg',
 						'type'       => 'color',
 						'label' => __( 'Single '.$this->single_up.' Background', 'pagelines' ),
-						'default'	=> '#',
+						'default'	=> '',
 					),
 					array(
 						'key'           => $this->prefix.'-groupbg',
 						'type'       => 'color',
 						'label' => __( 'Group Background', 'pagelines' ),
-						'default'	=> '#',
+						'default'	=> '',
 						'ref'	=> __('Some meta fields are grouped (depends on template) - <br>
 								Usually, title and position.', 'pagelines')
 					),
@@ -533,7 +526,7 @@ class PeopleLud extends PageLinesSection {
 						'key'           => $this->prefix.'-imgbg',
 						'type'       => 'color',
 						'label' => __( 'Image Background', 'pagelines' ),
-						'default'	=> '#'
+						'default'	=> ''
 					)
 				)
 			),
@@ -546,49 +539,49 @@ class PeopleLud extends PageLinesSection {
 						'key'           => $this->prefix.'-title-color',
 						'type'          => 'color',
 						'label'    => __( 'Name Color', 'pagelines' ),
-						'default'	=> '#',
+						'default'	=> pl_setting('text_primary'),
 					),
 					array(
 						'key'           => $this->prefix.'-position-color',
 						'type'          => 'color',
 						'label'    => __( 'Position Color', 'pagelines' ),
-						'default'	=> '#',
+						'default'	=> pl_setting('text_primary'),
 					),
 					array(
 						'key'           => $this->prefix.'-company-color',
 						'type'          => 'color',
 						'label'    => __( 'Company Color', 'pagelines' ),
-						'default'	=> '#',
+						'default'	=> pl_setting('text_primary'),
 					),
 					array(
 						'key'           => $this->prefix.'-content-color',
 						'type'          => 'color',
 						'label'    => __( 'Content Text Color', 'pagelines' ),
-						'default'	=> '#',
+						'default'	=> pl_setting('text_primary'),
 					),
 					array(
 						'key'           => $this->prefix.'-custom1-color',
 						'type'          => 'color',
 						'label'    => __( 'Custom Text 1 Color', 'pagelines' ),
-						'default'	=> '#',
+						'default'	=> pl_setting('text_primary'),
 					),
 					array(
 						'key'           => $this->prefix.'-custom2-color',
 						'type'          => 'color',
 						'label'    => __( 'Custom Text 2 Color', 'pagelines' ),
-						'default'	=> '#',
+						'default'	=> pl_setting('text_primary'),
 					),
 					array(
 						'key'           => $this->prefix.'-icon-color',
 						'type'       => 'color',
 						'label' => __( 'Icon Color', 'pagelines' ),
-						'default'	=> '#',
+						'default'	=> pl_setting('linkcolor'),
 					),
 					array(
 						'key'           => $this->prefix.'-iconhover-color',
 						'type'       => 'color',
 						'label' => __( 'Icon Hover Color', 'pagelines' ),
-						'default'	=> '#',
+						'default'	=> '#000',
 					)
 				)
 			)
@@ -598,18 +591,19 @@ class PeopleLud extends PageLinesSection {
 
 	//add less vars
 	function add_less_vars($vars){
-		if( pl_setting($this->prefix.'-templatebg') )	$vars[$this->prefix.'-templatebg'] 	= pl_hashify( pl_setting( $this->prefix.'-templatebg' ) );
-		if(( pl_setting($this->prefix.'-singlebg') )) 	$vars[$this->prefix.'-singlebg'] 		= pl_hashify( pl_setting( $this->prefix.'-singlebg' ) );
-		if(( pl_setting($this->prefix.'-groupbg') )) 	$vars[$this->prefix.'-groupbg'] 		= pl_hashify( pl_setting( $this->prefix.'-groupbg' ) );
-		if(( pl_setting($this->prefix.'-imgbg') ))	 	$vars[$this->prefix.'-imgbg'] 		= pl_hashify( pl_setting( $this->prefix.'-imgbg' ) );
-		if(( pl_setting($this->prefix.'-title-color') )) 	$vars[$this->prefix.'-title-color'] 		=  pl_hashify( pl_setting( $this->prefix.'-title-color' ) );
-		if(( pl_setting($this->prefix.'-position-color') )) 	$vars[$this->prefix.'-position-color'] 	=  pl_hashify( pl_setting( $this->prefix.'-position-color' ) );
-		if(( pl_setting($this->prefix.'-company-color') )) 	$vars[$this->prefix.'-company-color'] 	=  pl_hashify( pl_setting( $this->prefix.'-company-color' ) );
-		if(( pl_setting($this->prefix.'-content-color') )) 	$vars[$this->prefix.'-content-color'] 	=  pl_hashify( pl_setting( $this->prefix.'-content-color' ) );
-		if(( pl_setting($this->prefix.'-custom1-color') )) 	$vars[$this->prefix.'-custom1-color'] 	=  pl_hashify( pl_setting( $this->prefix.'-custom1-color' ) );
-		if(( pl_setting($this->prefix.'-custom2-color') )) 	$vars[$this->prefix.'-custom2-color'] 	=  pl_hashify( pl_setting( $this->prefix.'-custom2-color' ) );
-		if(( pl_setting($this->prefix.'-icon-color') )) 	$vars[$this->prefix.'-icon-color'] 		=  pl_hashify( pl_setting( $this->prefix.'-icon-color' ) );
-		if( (pl_setting($this->prefix.'-iconhover-color'))) 	$vars[$this->prefix.'-iconhover-color']	= pl_hashify(pl_setting($this->prefix.'-iconhover-color'));
+		$vars[$this->prefix.'-templatebg'] 	=  ( pl_setting($this->prefix.'-templatebg')) 	? pl_hashify( pl_setting( $this->prefix.'-templatebg' ) ): 'transparent';
+		$vars[$this->prefix.'-singlebg'] 		= ( pl_setting($this->prefix.'-singlebg') ) 	? pl_hashify( pl_setting( $this->prefix.'-singlebg' ) ): 'transparent';
+		$vars[$this->prefix.'-groupbg'] 		= ( pl_setting($this->prefix.'-groupbg') ) 	? pl_hashify( pl_setting( $this->prefix.'-groupbg' ) ): 'transparent';
+		$vars[$this->prefix.'-imgbg'] 		= ( pl_setting($this->prefix.'-imgbg') ) 	? pl_hashify( pl_setting( $this->prefix.'-imgbg' ) ): 'transparent';
+ 		$vars[$this->prefix.'-title-color'] 		=  ( pl_setting($this->prefix.'-title-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-title-color' ) ): pl_setting('text_primary');
+		$vars[$this->prefix.'-position-color'] 	=  ( pl_setting($this->prefix.'-position-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-position-color' ) ): pl_setting('text_primary');
+		$vars[$this->prefix.'-company-color'] 	=  ( pl_setting($this->prefix.'-company-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-company-color' ) ): pl_setting('text_primary');
+		$vars[$this->prefix.'-content-color'] 	=  ( pl_setting($this->prefix.'-content-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-content-color' ) ): pl_setting('text_primary');
+		$vars[$this->prefix.'-custom1-color'] 	=  ( pl_setting($this->prefix.'-custom1-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-custom1-color' ) ): pl_setting('text_primary');
+		$vars[$this->prefix.'-custom2-color'] 	=  ( pl_setting($this->prefix.'-custom2-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-custom2-color' ) ): pl_setting('text_primary');
+		$vars[$this->prefix.'-icon-color'] 		=  ( pl_setting($this->prefix.'-icon-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-icon-color' ) ):  pl_setting('linkcolor');
+		$vars[$this->prefix.'-iconhover-color']	=  (pl_setting($this->prefix.'-iconhover-color')) 	? pl_hashify(pl_setting($this->prefix.'-iconhover-color')): '#000';
+
 		return $vars;
 	}
 
@@ -701,7 +695,7 @@ class PeopleLud extends PageLinesSection {
 	//post type
 	function post_type_setup() {
 		$public_pt = false;
-		//if($this->meta['set']['use_colorbox']) $public_pt = false;
+		//$public_pt = (pl_setting('disable_public_pt')) ? false : true;
 		$args = array(
 			'label'			=> __( $this->multiple_up, 'pagelines' ),
 			'singular_label'		=> __( $this->single_up, 'pagelines' ),

@@ -24,7 +24,7 @@
 	.ppl-post_content{color:@ppl-content-color;}
 	.ppl-group{color: @ppl-groupbg;}
 	//.fredslider li{width: 33%;}
-	.in-grid{	margin: 0 auto; li{width: 33%;}}
+	.in-grid{	margin: 0 auto; li{width: 33%; .box-sizing(border-box);}}
 	.masonry-brick{
 		margin: 8px 0;
 		overflow: hidden;
@@ -42,41 +42,7 @@
 		}
 	}
 }
-/****************************options style*****************************/
-form[data-sid="people-lud"], form[data-scope="people-lud"]{
-	.opt{
-		background: #2f2f2f !important;
-		min-height: 280px;
-	}
-	#master_template_settings.opt{
-		background: #017EB9 !important;
-
-	}
-	label{
-		.fix;
-		color:white !important;
-		font-size:1em !important;
-		.btn.btn-mini{
-			float:right;
-		}
-	}
-	.opt-name{
-		font-size: 1.3em !important;
-		background: white !important;
-		box-shadow: 0 0 0 !important;
-		color:@blue !important;
-	}
-	select, textarea, input{
-		margin-bottom: 10px;
-	}
-	.check-standard{display: block !important;}
-    	.check-flip{display: none !important;}
-    	label[for="opt_set_info"],input[id="opt_set_info"],label[for="grid_selector"],input[id="grid_selector"]{
-		display:none !important;
-	}
-}
 /************************************DEFAULT TEMPLATE************************************/
-/************************************default************************************/
 /************************************default************************************/
 .ppl-container.template-default{
 	.ppl-item{

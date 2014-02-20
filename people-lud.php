@@ -5,6 +5,6 @@
 	Author URI: http://www.bestrag.net
 	Description: Testimonials Lud for DMS
 	Demo: http://bestrag.net/people-lud/demo
-	Version: 1.0
+	Version: 1.1
 	PageLines: true
 	*/
