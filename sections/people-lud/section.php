@@ -2,7 +2,7 @@
 /*
 	Section: People Lud
 	Author: bestrag
-	Version: 1.1
+	Version: 1.1.1
 	Author URI: http://bestrag.net
 	Demo: http://bestrag.net/people_lud/demo
 	Description: Custom Post Type Section for displaying People/Teams/Artists
@@ -183,7 +183,7 @@ class PeopleLud extends PageLinesSection {
 				$temp_data['post_content'][0]	= get_the_content( );
 				$temp_data['post_url'][0]	= get_post_permalink();
 				if($temp_data['img'][0]) {
-					$temp_data['img'][0]	= ($temp_data['demo'][0]) ?  '<img src="'. $temp_data['img'][0] . '">' :  wp_get_attachment_image($temp_data['img'][0]);
+					$temp_data['img'][0]	= (array_key_exists('demo', $temp_data) && $temp_data['demo'][0]) ?  '<img src="'. $temp_data['img'][0] . '">' :  wp_get_attachment_image($temp_data['img'][0], 'full');
 				}
 				//collects all posts data in one array
 				$post_data[] = $temp_data;
