@@ -2,7 +2,7 @@
 /*
 	Section: People Lud
 	Author: bestrag
-	Version: 1.1.1
+	Version: 1.1.3
 	Author URI: http://bestrag.net
 	Demo: http://bestrag.net/people_lud/demo
 	Description: Custom Post Type Section for displaying People/Teams/Artists
@@ -25,27 +25,29 @@ class PeopleLud extends PageLinesSection {
 	/* section_styles */
 	function section_scripts() {
 		wp_enqueue_script( 'jquery-masonry', array( 'jquery' ) );
-//		wp_enqueue_script( 'jquery-colorbox', $this->base_url.'/jquery.colorbox-min.js', array( 'jquery' ), true );
 		wp_enqueue_script( 'jquery-ludloop', $this->base_url.'/jquery.ludloop.js', array( 'jquery' ), true );
 	}
 
 	/* section_head */
 	function section_head() {
-
-		if( $this->opt('opt_set_select') ) $this->update_lud_settings($this->opt('opt_set_select'));
-		$this->meta['set'] = wp_parse_args( $this->temp_meta, $this->meta['set'] );
+		$clone_id = $this->meta['clone'];
+		if( $this->opt('opt_set_select') ) {
+			$this->update_lud_settings($this->opt('opt_set_select'));
+			if( array_key_exists($clone_id, $this->temp_meta) )$this->meta['set'] = wp_parse_args( $this->temp_meta[$clone_id], $this->meta['set'] );
+		}
 		$this->lud_opts['template_name']	= ( $this->opt( 'template_name' ) ) ? $this->opt( 'template_name' ) : $this->default_template;
 		//text style and weight
 		$this->lud_opts['text_italic']	= ( $this->opt( 'text_italic' ) ) ? 'italic' : 'normal' ;
 		$this->lud_opts['text_bold']	= ( $this->opt( 'text_bold' ) ) ? 'bold' : 'normal' ;
 		$this->lud_opts['enable_animation']	= false;
 		//single post vs lightbox
-//		$this->lud_opts['use_link']	= ( $this->opt( 'use_link' ) ) ? $this->opt( 'use_link' ) : false;
 		$this->lud_opts['use_link']	= false;
 		//layout
-		$this->lud_opts['numslides']	= ( $this->opt( 'col_num' ) )  ? intval($this->opt( 'col_num' )) : 1;
+		$this->lud_opts['numslides']	= ( $this->opt( 'col_num' ) )  ? intval($this->opt( 'col_num' )) : 5;
 		$this->lud_opts['slide_gutter']	= ( $this->opt( 'slide_gutter' ) ) ?  intval($this->opt( 'slide_gutter' ) ).'px' : '0' ;
 		$this->lud_opts['equal_height']		= ( $this->opt( 'equal_height') ) ? false : true ;
+		//not used in people lud
+		$this->lud_opts['fluid']	= ( $this->opt( 'fluid') ) ? true : false ;
 		//carousell single item min width - needed in ludloop.js
 		$this->lud_opts['defFredWidth']	= 200;
 		$this->lud_opts['fredWidth']		= 300;
@@ -85,25 +87,24 @@ class PeopleLud extends PageLinesSection {
 					});
 				}
 				function responsiveClasses(){
-			                    if(768 > ludSelectors[cloneID]['container'].width()){
-			                        if(ludOpts[cloneID]['numslides'] > 3) ludOpts[cloneID]['numslides'] = 3;
-			                    }
-			                    if(600 > ludSelectors[cloneID]['container'].width()){
-			                        if(ludOpts[cloneID]['numslides'] > 2) ludOpts[cloneID]['numslides'] = 2;
-			                    }
-			                    if(480 > ludSelectors[cloneID]['container'].width()){
-			                        ludOpts[cloneID]['numslides'] = 1;
-			                    }
-
-			                    var calcItemWidth = (ludSelectors[cloneID]['container'].width()/ludOpts[cloneID]['numslides']) - 1;
-			                    ludSelectors[cloneID]['ludItem'].css({
-			                        'width' :   calcItemWidth
-			                    });
-			                   ludOpts[cloneID]['itemWidth'] = Math.ceil(calcItemWidth);
-			                    if (384 > calcItemWidth) return ludSelectors[cloneID]['container'].addClass(ludOpts[cloneID]['template_name'] + '-c2');
-			                    if (245 > calcItemWidth) return ludSelectors[cloneID]['container'].addClass(ludOpts[cloneID]['template_name'] + '-c3');
-			                }
-
+					if(768 > ludSelectors[cloneID]['container'].width()){
+						if(ludOpts[cloneID]['numslides'] > 3) ludOpts[cloneID]['numslides'] = 4;
+					}
+					if(600 > ludSelectors[cloneID]['container'].width()){
+						if(ludOpts[cloneID]['numslides'] > 2) ludOpts[cloneID]['numslides'] = 3;
+					}
+					if(480 > ludSelectors[cloneID]['container'].width()){
+						ludOpts[cloneID]['numslides'] = 1;
+					}
+					//set single item width
+					var calcItemWidth = Math.floor((ludSelectors[cloneID]['container'].width()/ludOpts[cloneID]['numslides']) );
+					ludSelectors[cloneID]['ludItem'].css({
+						'width' :	calcItemWidth
+					});
+					ludOpts[cloneID]['itemWidth'] = calcItemWidth;
+					if (384 > calcItemWidth) return ludSelectors[cloneID]['container'].addClass(ludOpts[cloneID]['template_name'] + '-c2');
+					if (245 > calcItemWidth) return ludSelectors[cloneID]['container'].addClass(ludOpts[cloneID]['template_name'] + '-c3');
+				}
 			});
 			jQuery(window).load(function(){
 				cloneID 		= '<?php echo $this->meta['clone']; ?>';
@@ -125,7 +126,8 @@ class PeopleLud extends PageLinesSection {
 
 	//section template
 	function section_template(){
-		$this->meta['set'] = wp_parse_args( $this->temp_meta, $this->meta['set'] );
+		$clone_id = $this->meta['clone'];
+		if( array_key_exists($clone_id, $this->temp_meta) )$this->meta['set'] = wp_parse_args( $this->temp_meta[$clone_id], $this->meta['set'] );
 		//params
 		$template_name = ( $this->opt( 'template_name' ) ) ? $this->opt( 'template_name' ) : $this->default_template;
 		$use_link	= false;
@@ -261,10 +263,10 @@ class PeopleLud extends PageLinesSection {
 	function section_opts() {
 		$opts		= array();
 		if($this->opt('opt_set_select')) {
- 			$master_info = '<div class="alert" style="font-weight:400;">Last loaded Master Template: <br><span style="font-weight:bold;">'.$this->opt('opt_set_select').'</span></div>';
- 		}else{
- 			$master_info = ($this->opt('opt_set_info')) ? '<div class="alert" style="font-weight:400;">Last loaded Master Template: <br><span style="font-weight:bold;">'.$this->opt('opt_set_info').'</span></div>' : '<div class="alert" style="font-weight:400;">No Master Template Loaded</div>';
- 		}
+			$master_info = '<div class="alert" style="font-weight:400;">Last loaded Master Template: <br><span style="font-weight:bold;">'.$this->opt('opt_set_select').'</span></div>';
+		}else{
+			$master_info = ($this->opt('opt_set_info')) ? '<div class="alert" style="font-weight:400;">Last loaded Master Template: <br><span style="font-weight:bold;">'.$this->opt('opt_set_info').'</span></div>' : '<div class="alert" style="font-weight:400;">No Master Template Loaded</div>';
+		}
 		$opts[] = array(
 			'key'		=> 'master_template_settings',
 			'type'		=>  'multi',
@@ -303,17 +305,7 @@ class PeopleLud extends PageLinesSection {
 					'opts'		=> $this->get_template_selectvalues(),
 					'compile'	=> true
 				),
-/*				array(
-					'key'	=>	'use_link',
-					'type'       => 'select',
-					'label' => __( 'Handle click on '.$this->multiple_up.' Single Item', 'pagelines' ),
-					'opts' => array(
-						//'link'		=> array( 'name' => __( 'Link to '.$this->multiple_up.' single', 'pagelines' ) ),
-						'colorbox'	=> array( 'name' => __( 'Open in Lightbox', 'pagelines' ) ),
-						'none'		=> array( 'name' => __( 'None', 'pagelines' ) ),
-					)
-				),
-*/				array(
+				array(
 					'key'	=>	'taxonomy',
 					'type'			=> 'select_taxonomy',
 					'taxonomy_id'	=> $this->taxID,
@@ -440,6 +432,7 @@ class PeopleLud extends PageLinesSection {
 		return $opts;
 	}
 
+	//master template selector for opts
 	function opt_set_select(){
 		$dir 	= $this->base_dir.'/master-template/';
 		$files = glob($dir.'*.json');
@@ -465,7 +458,7 @@ class PeopleLud extends PageLinesSection {
 
 	//section persistent
 	function section_persistent(){
-		add_action( 'template_redirect',array(&$this, 'people_lud_less') );
+		//add_action( 'template_redirect',array(&$this, 'people_lud_less') );
 		add_filter( 'pl_settings_array', array( &$this, 'get_meta_array' ) );
 		add_filter('pless_vars', array(&$this, 'add_less_vars'));
 		//set post
@@ -479,8 +472,8 @@ class PeopleLud extends PageLinesSection {
 	//notice for metabox
 	function people_lud_notice(){
 		echo '<div class="updated">
-		   	<p>For the <strong>People Lud</strong> you need to install the <strong>Meta Box</strong> plugin by <a href="http://www.deluxeblogtips.com/" >Rilwis</a>. It is well tested, <strong>free</strong>, open source solution that will be seamlessly integrated once you install it. <strong>It does not require your attention.</strong>
-		   	You can get it from <a href="http://wordpress.org/plugins/meta-box" target="_blank"><strong>here</strong></a>.</p>
+			<p>For the <strong>People Lud</strong> you need to install the <strong>Meta Box</strong> plugin by <a href="http://www.deluxeblogtips.com/" >Rilwis</a>. It is well tested, <strong>free</strong>, open source solution that will be seamlessly integrated once you install it. <strong>It does not require your attention.</strong>
+			You can get it from <a href="http://wordpress.org/plugins/meta-box" target="_blank"><strong>here</strong></a>.</p>
 		</div>';
 	}
 
@@ -595,7 +588,7 @@ class PeopleLud extends PageLinesSection {
 		$vars[$this->prefix.'-singlebg'] 		= ( pl_setting($this->prefix.'-singlebg') ) 	? pl_hashify( pl_setting( $this->prefix.'-singlebg' ) ): 'transparent';
 		$vars[$this->prefix.'-groupbg'] 		= ( pl_setting($this->prefix.'-groupbg') ) 	? pl_hashify( pl_setting( $this->prefix.'-groupbg' ) ): 'transparent';
 		$vars[$this->prefix.'-imgbg'] 		= ( pl_setting($this->prefix.'-imgbg') ) 	? pl_hashify( pl_setting( $this->prefix.'-imgbg' ) ): 'transparent';
- 		$vars[$this->prefix.'-title-color'] 		=  ( pl_setting($this->prefix.'-title-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-title-color' ) ): pl_setting('text_primary');
+		$vars[$this->prefix.'-title-color'] 		=  ( pl_setting($this->prefix.'-title-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-title-color' ) ): pl_setting('text_primary');
 		$vars[$this->prefix.'-position-color'] 	=  ( pl_setting($this->prefix.'-position-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-position-color' ) ): pl_setting('text_primary');
 		$vars[$this->prefix.'-company-color'] 	=  ( pl_setting($this->prefix.'-company-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-company-color' ) ): pl_setting('text_primary');
 		$vars[$this->prefix.'-content-color'] 	=  ( pl_setting($this->prefix.'-content-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-content-color' ) ): pl_setting('text_primary');
@@ -746,7 +739,7 @@ class PeopleLud extends PageLinesSection {
 				'position'	=>   'Random User',
 				'company'	=>   'Bestrag',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
-				'custom_text2'	=>   'Great Leader',
+				'custom_text2'	=>   '',
 				'img'		=>   $this->base_url.'/images/isabel.jpg',
 				'demo'		=> true,
 				'facebook'	=> '#',
@@ -765,7 +758,7 @@ class PeopleLud extends PageLinesSection {
 				'position'	=>   'Random Man',
 				'company'	=>   'RandomR',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
-				'custom_text2'	=>   'All about the brains',
+				'custom_text2'	=>   '',
 				'img'		=>   $this->base_url.'/images/paul.jpg',
 				'demo'		=> true,
 				'facebook'	=> '#',
@@ -784,7 +777,7 @@ class PeopleLud extends PageLinesSection {
 				'position'	=>   'Random Position',
 				'company'	=>   'RandomCo',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
-				'custom_text2'	=>   'Creative force',
+				'custom_text2'	=>   '',
 				'img'		=>   $this->base_url.'/images/evelin.jpg',
 				'demo'		=> true,
 				'facebook'	=> '#',
@@ -803,7 +796,7 @@ class PeopleLud extends PageLinesSection {
 				'position'	=>   'Inspire Others',
 				'company'	=>   'iInspireCo',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
-				'custom_text2'	=>   'BeckEnd magician',
+				'custom_text2'	=>   '',
 				'img'		=>   $this->base_url.'/images/kenzi.jpg',
 				'demo'		=> true,
 				'facebook'	=> '#',
@@ -822,7 +815,7 @@ class PeopleLud extends PageLinesSection {
 				'position'	=>   'Creative Position',
 				'company'	=>   'RandomCo',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
-				'custom_text2'	=>   'Top Seller',
+				'custom_text2'	=>   '',
 				'img'		=>   $this->base_url.'/images/kim.jpg',
 				'demo'		=> true,
 				'facebook'	=> '#',
@@ -841,7 +834,7 @@ class PeopleLud extends PageLinesSection {
 				'position'	=>   'iImagineCo',
 				'company'	=>   'ImagineCo',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
-				'custom_text2'	=>   'Big Papa',
+				'custom_text2'	=>   '',
 				'img'		=>   $this->base_url.'/images/nathan.jpg',
 				'demo'		=> true,
 				'facebook'	=> '#',
@@ -891,11 +884,14 @@ class PeopleLud extends PageLinesSection {
 			echo the_excerpt();
 			break;
 		case 'media':
-			 if ( get_post_meta( $post->ID, 'img', true ) ){
-				echo '<img src="'.get_post_meta( $post->ID, 'img', true ).'" style="max-width: 80px; margin: 10px; border: 1px solid #ccc; padding: 5px; background: #fff" />';
+			$is_demo_post = get_post_meta( $post->ID, 'demo', true );
+			$img = get_post_meta( $post->ID, 'img', true );
+			// check if the custom field has a value
+			if( ! empty( $is_demo_post ) ) {
+				if ( $img ) echo '<img src="'.$img.'" style="max-width: 80px; margin: 10px; border: 1px solid #ccc; padding: 5px; background: #fff" />';
 			}
 			else {
-				if ( has_post_thumbnail( $post->ID ) ){ echo get_the_post_thumbnail( $post->ID, array(80,80) ); }
+				if ( $img ) echo wp_get_attachment_image($img, array(80, 80));
 			}
 			break;
 		case 'client-company':
@@ -916,7 +912,6 @@ class PeopleLud extends PageLinesSection {
 		$this->opt_update('opt_set_select', null, 'local');
 		$default = array(
 			'template_name' => null,
-//			'use_link' => null,
 			'taxonomy' => null,
 			'order' => null,
 			'orderby' => null,
@@ -930,25 +925,26 @@ class PeopleLud extends PageLinesSection {
 			'use_social' => null,
 			'social_icon_variant' => null,
 			'social_icon_size' => null,
+			'fluid' => null,
 			'opt_set_info' => $template
 		);
-
+		$clone_id = $this->meta['clone'];
 		$data_path = $this->base_dir.'/master-template/';
 		$opts_json	= (file_exists($data_path.$template.'.json')) ? file_get_contents($data_path.$template.'.json')  : array() ;
 		$opts_json = json_decode($opts_json, true);
 		$opts = wp_parse_args( $opts_json, $default );
 		foreach ($opts as $key => $value) {
 			$this->opt_update($key, $value, 'local');
-			$this->temp_meta[$key] = $value;
+			$this->temp_meta[$clone_id][$key] = $value;
 		}
 		if( !PL_LESS_DEV ) pl_flush_draft_caches();
 	}
 
 	//handle less template
-	function people_lud_less(){
+/*	function people_lud_less(){
 		$template	= (isset( $this->meta['set']['template_name'])) ? $this->meta['set']['template_name'] : $this->default_template;
 		$template_file 	= sprintf('%s/templates/%s.less', $this->base_dir, $template);
 		pagelines_insert_core_less( $template_file );
 	}
-
+*/
 }//EOC
