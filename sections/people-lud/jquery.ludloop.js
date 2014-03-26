@@ -1,5 +1,5 @@
 /*
-ver: 1.3
+ver: 1.6
 */
 //TODO: ludResponsive - add responsiveClasses & ItemStyle to $(document).ready(...);
 jQuery(window).load(function(){
@@ -70,7 +70,6 @@ jQuery(window).load(function(){
 					prev : {	button  : ''},
 					next : { button  : ''}
 				}
-				defFredObj = jQuery.extend({},defFredObj,self.options.fredObject);
 				//pager
 				if(self.options.pager === true) {
 					defFredObj.pagination = self.selectors.pager.selector;
@@ -85,6 +84,7 @@ jQuery(window).load(function(){
 					self.selectors.next.show(0);
 					self.selectors.prev.show(0);
 				}
+				defFredObj = jQuery.extend({},defFredObj,self.options.fredObject);
 				//initiate fred
 				self.selectors.wraper.delay(800, 'carouFredSel').carouFredSel(defFredObj);
 				self.itemHeight();
@@ -97,7 +97,7 @@ jQuery(window).load(function(){
 				jQuery('.'+self.selectors.sectionPrefix+'-link',self.selectors.ludItem).click(function(e){
 					e.preventDefault();
 					var obj = jQuery(e.currentTarget);
-					obj.colorbox({inline:true, href: '#'+self.selectors.sectionPrefix+'-inner-'+obj.data(self.selectors.sectionPrefix+'-id'), height: '600px', width: '80%'});
+					obj.colorbox({inline:true, href: '#'+ obj.data('inner-id'), height: '600px', width: '80%'});
 				});
 			}
 		},

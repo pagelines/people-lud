@@ -2,9 +2,9 @@
 /*
 	Section: People Lud
 	Author: bestrag
-	Version: 1.1.3
+	Version: 1.2.0
 	Author URI: http://bestrag.net
-	Demo: http://bestrag.net/people_lud/demo
+	Demo: http://bestrag.net/people-lud/demo
 	Description: Custom Post Type Section for displaying People/Teams/Artists
 	Class Name: PeopleLud
 	Filter: component
@@ -21,6 +21,9 @@ class PeopleLud extends PageLinesSection {
 	var $section_id		= 'people-lud';
 	var $default_template	= 'default';
 	var $temp_meta	= array();
+	var $clone		= '';
+	var $ico 		= '';
+	var $ico_type 		= '';
 
 	/* section_styles */
 	function section_scripts() {
@@ -28,13 +31,51 @@ class PeopleLud extends PageLinesSection {
 		wp_enqueue_script( 'jquery-ludloop', $this->base_url.'/jquery.ludloop.js', array( 'jquery' ), true );
 	}
 
-	/* section_head */
-	function section_head() {
-		$clone_id = $this->meta['clone'];
+	function setup_oset($clone){
+		//master template
 		if( $this->opt('opt_set_select') ) {
 			$this->update_lud_settings($this->opt('opt_set_select'));
-			if( array_key_exists($clone_id, $this->temp_meta) )$this->meta['set'] = wp_parse_args( $this->temp_meta[$clone_id], $this->meta['set'] );
 		}
+		//set/update section_opts colors
+		$this->update_lud_colors();
+		//fontAwesome for DMS 2.0
+		global $platform_build;
+		$ver = intval(substr($platform_build, 0, 1));
+		$this->ico = ($ver === 2) ? 'fa' : 'icon';
+		$this->ico_type = ($ver === 2) ? '-square' : '-sign';
+	}
+
+	/* clone specific styles */
+	function section_styles(){
+		$colors=array(
+			'templatebg'		=> array('.'.$this->prefix.'-container','#'.$this->opt('templatebg'), 'background-color'),
+			'singlebg'		=> array('.'.$this->prefix.'-item-inner','#'.$this->opt('singlebg'), 'background-color'),
+			'groupbg1'		=> array('#'.$this->prefix.'-group-1','#'.$this->opt('groupbg1'), 'background-color'),
+			'groupbg2'		=> array('#'.$this->prefix.'-group-2','#'.$this->opt('groupbg2'), 'background-color'),
+			'imgbg'			=> array('.'.$this->prefix.'-img','#'.$this->opt('imgbg'), 'background-color'),
+			'title-color'		=> array('.'.$this->prefix.'-post_title','#'.$this->opt('title-color'), 'color'),
+			'content-color'		=> array('.'.$this->prefix.'-post_content','#'.$this->opt('content-color'), 'color'),
+			'position-color'		=> array('.'.$this->prefix.'-position','#'.$this->opt('position-color'), 'color'),
+			'company-color'	=> array('.'.$this->prefix.'-company','#'.$this->opt('company-color'), 'color'),
+			'custom1-color'		=> array('.'.$this->prefix.'-custom_text1','#'.$this->opt('custom1-color'), 'color'),
+			'custom2-color'		=> array('.'.$this->prefix.'-custom_text2','#'.$this->opt('custom2-color'), 'color'),
+			'icon-color'		=> array('.people-social a','#'.$this->opt('icon-color'), 'color'),
+			'iconhover-color'	=> array('.people-social a:hover','#'.$this->opt('iconhover-color'), 'color'),
+		);
+		$css_code = '';
+		foreach ($colors as $key => $value) {
+			if($value[1] && $value[1] !== '#' && $value[1] !== 'px' ){
+				$css_code .= sprintf('#%4$s%5$s %1$s{%2$s:%3$s;}', $value[0], $value[2], $value[1], $this->section_id, $this->meta['clone']);
+			}
+		}
+		if ($css_code) {
+			$lud_style = sprintf('<style type="text/css" id="%1$s-custom-%2$s">%3$s</style>', $this->prefix, $this->meta['clone'], $css_code);
+			echo $lud_style;
+		}
+	}
+
+	/* section_head */
+	function section_head() {
 		$this->lud_opts['template_name']	= ( $this->opt( 'template_name' ) ) ? $this->opt( 'template_name' ) : $this->default_template;
 		//text style and weight
 		$this->lud_opts['text_italic']	= ( $this->opt( 'text_italic' ) ) ? 'italic' : 'normal' ;
@@ -126,12 +167,9 @@ class PeopleLud extends PageLinesSection {
 
 	//section template
 	function section_template(){
-		$clone_id = $this->meta['clone'];
-		if( array_key_exists($clone_id, $this->temp_meta) )$this->meta['set'] = wp_parse_args( $this->temp_meta[$clone_id], $this->meta['set'] );
 		//params
 		$template_name = ( $this->opt( 'template_name' ) ) ? $this->opt( 'template_name' ) : $this->default_template;
 		$use_link	= false;
-		//$use_link		= ( $this->opt('use_link') ) ? $this->opt('use_link') : false;
 		$link_elems		= array('img');
 		$a_open		= '';
 		$a_close		= '';
@@ -140,13 +178,13 @@ class PeopleLud extends PageLinesSection {
 		//social
 		$use_social		= ( $this->opt('use_social') ) ? false : true;
 		$social_icon_size	=( $this->opt('social_icon_size') ) ? $this->opt('social_icon_size') : '2x';
-		$social_icon_variant	= ( $this->opt('social_icon_variant') && $this->opt('social_icon_variant') === 'simbol' ) ? '' : '-sign';
-		$social_facebook_icon 	= 'icon-facebook'.$social_icon_variant;
-		$social_twitter_icon	= 'icon-twitter'.$social_icon_variant;
-		$social_google_icon	= 'icon-google-plus'.$social_icon_variant;
-		$social_linkedin_icon	= 'icon-linkedin'.$social_icon_variant;
-		$social_github_icon	= 'icon-github'.$social_icon_variant;
-		$social_instagram_icon	= 'icon-instagram';
+		$social_icon_variant	= ( $this->opt('social_icon_variant') && $this->opt('social_icon_variant') === 'simbol' ) ? '' : '-square';
+		$social_facebook_icon 	= $this->ico.'-facebook'.$social_icon_variant;
+		$social_twitter_icon	= $this->ico.'-twitter'.$social_icon_variant;
+		$social_google_icon	= $this->ico.'-google-plus'.$social_icon_variant;
+		$social_linkedin_icon	= $this->ico.'-linkedin'.$social_icon_variant;
+		$social_github_icon	= $this->ico.'-github'.$social_icon_variant;
+		$social_instagram_icon	= $this->ico.'-instagram';
 		//template json
 		$data_path	= $this->base_dir.'/data/';
 		$template_json	= (file_exists($data_path.$template_name.'.json')) ? file_get_contents($data_path.$template_name.'.json') : file_get_contents($data_path.'default.json') ;
@@ -192,7 +230,7 @@ class PeopleLud extends PageLinesSection {
 				//create link to single post
 				if(in_array($use_link, array('link', 'colorbox'))) {
 					$link_index = $index + 1;
-					$a_open = sprintf('<a href="%1$s" class="%2$s-link %2$s-link-%3$s" data-proj-id="%3$s">', $post_data[$index]['post_url'][0], $this->prefix, $link_index );
+					$a_open = sprintf('<a href="%1$s" class="%2$s-link %2$s-link-%3$s" data-inner-id="%2$s-inner-%3$s">', $post_data[$index]['post_url'][0], $this->prefix, $link_index );
 					$a_close = '</a>';
 				}
 				//render elements
@@ -229,13 +267,12 @@ class PeopleLud extends PageLinesSection {
 				if($use_social === false){
 					$social = '';
 				}else{
-
-					$facebook	= ($post_data[$index]['facebook'][0]) ? '<a href="https://www.facebook.com/'.$post_data[$index]['facebook'][0].'" class="ppl-single-link ppl-facebook-link" target="_blank"><i class="'.$social_facebook_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
-					$twitter	= ($post_data[$index]['twitter'][0]) ? '<a href="http://twitter.com/'.$post_data[$index]['twitter'][0].'" class="ppl-single-link ppl-twitter-link" target="_blank"><i class="'.$social_twitter_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
-					$google		= ($post_data[$index]['google'][0]) ? '<a href="https://plus.google.com/'.$post_data[$index]['google'][0].'" class="ppl-single-link ppl-google-link" target="_blank"><i class="'.$social_google_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
-					$linkedin	= ($post_data[$index]['linkedin'][0]) ? '<a href="http://www.linkedin.com/profile/view?id='.$post_data[$index]['linkedin'][0].'" class="ppl-single-link ppl-linkedin-link" target="_blank"><i class="'.$social_linkedin_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
-					$github		= ($post_data[$index]['github'][0]) ? '<a href="https://github.com/'.$post_data[$index]['github'][0].'" class="ppl-single-link ppl-github-link" target="_blank"><i class="'.$social_github_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
-					$instagram	= ($post_data[$index]['instagram'][0]) ? '<a href="https://instagram.com/'.$post_data[$index]['instagram'][0].'" class="ppl-single-link ppl-instagram-link" target="_blank"><i class="'.$social_instagram_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
+					$facebook	= (array_key_exists('facebook', $post_data[$index]) && $post_data[$index]['facebook'][0]) ? '<a href="https://www.facebook.com/'.$post_data[$index]['facebook'][0].'" class="ppl-single-link ppl-facebook-link" target="_blank"><i class="'.$this->ico.' '.$social_facebook_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
+					$twitter		= (array_key_exists('twitter', $post_data[$index]) && $post_data[$index]['twitter'][0]) ? '<a href="http://twitter.com/'.$post_data[$index]['twitter'][0].'" class="ppl-single-link ppl-twitter-link" target="_blank"><i class="'.$this->ico.' '.$social_twitter_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
+					$google	= (array_key_exists('google', $post_data[$index]) && $post_data[$index]['google'][0]) ? '<a href="https://plus.google.com/'.$post_data[$index]['google'][0].'" class="ppl-single-link ppl-google-link" target="_blank"><i class="'.$this->ico.' '.$social_google_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
+					$linkedin	= (array_key_exists('linkedin', $post_data[$index]) && $post_data[$index]['linkedin'][0]) ? '<a href="http://www.linkedin.com/profile/view?id='.$post_data[$index]['linkedin'][0].'" class="ppl-single-link ppl-linkedin-link" target="_blank"><i class="'.$this->ico.' '.$social_linkedin_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
+					$github		= (array_key_exists('github', $post_data[$index]) && $post_data[$index]['github'][0]) ? '<a href="https://github.com/'.$post_data[$index]['github'][0].'" class="ppl-single-link ppl-github-link" target="_blank"><i class="'.$this->ico.' '.$social_github_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
+					$instagram	= (array_key_exists('instagram', $post_data[$index]) && $post_data[$index]['instagram'][0]) ? '<a href="https://instagram.com/'.$post_data[$index]['instagram'][0].'" class="ppl-single-link ppl-instagram-link" target="_blank"><i class="'.$this->ico.' '.$social_instagram_icon.' icon-'.$social_icon_size.'"></i></a>' : '';
 					$social		= sprintf('<div class="lud-social %1$s-social">%2$s%3$s%4$s%5$s%6$s%7$s</div>',$this->multiple, $facebook,$twitter,$google,$linkedin,$github, $instagram);
 				}
 				//wrap elements in <li>
@@ -345,10 +382,16 @@ class PeopleLud extends PageLinesSection {
 			'opts' => array(
 				array(
 					'key'	=>	'col_num',
-					'type'		=> 'count_select',
-					'count_start'	=> '1',
-					'count_number'	=> '6',
+					'type'	=> 'select',
 					'label'	=> __( 'Number of columns', 'pagelines' ),
+					'opts'	=> array(
+						'1'		=> array( 'name' => __( '1', 'pagelines' ) ),
+						'2'		=> array( 'name' => __( '2', 'pagelines' ) ),
+						'3'		=> array( 'name' => __( '3', 'pagelines' ) ),
+						'4'		=> array( 'name' => __( '4', 'pagelines' ) ),
+						'5'		=> array( 'name' => __( '5', 'pagelines' ) ),
+						'6'		=> array( 'name' => __( '6', 'pagelines' ) ),
+					),
 				),
 				array(
 					'key'	=>	'slides_num',
@@ -408,7 +451,7 @@ class PeopleLud extends PageLinesSection {
 					'type'		=> 'select',
 					'label'	=> __( 'Social Icon Set', 'pagelines' ),
 					'opts'	=> array(
-						'sign'		=> array( 'name' => __( 'Sign (Default)', 'pagelines' ) ),
+						'sign'		=> array( 'name' => __( 'Square/Sign (Default)', 'pagelines' ) ),
 						'simbol'		=> array( 'name' => __( 'Simbol', 'pagelines' ) ),
 					)
 				),
@@ -427,6 +470,101 @@ class PeopleLud extends PageLinesSection {
 				),
 
 
+			)
+		);
+		$opts[] = array(
+			'key'	=> 'bg_colors',
+			'type' 	=> 	'multi',
+			'col'	=> 1,
+			'title' => __( 'Background Colors', 'pagelines' ),
+			'opts'	=> array(
+				array(
+					'key'           => 'templatebg',
+					'type'       => 'color',
+					'label' => __( 'Container Background', 'pagelines' ),
+					'default'	=> '',
+				),
+				array(
+					'key'           => 'singlebg',
+					'type'       => 'color',
+					'label' => __( 'Single Item Background', 'pagelines' ),
+					'default'	=> '',
+				),
+				array(
+					'key'           => 'imgbg',
+					'type'       => 'color',
+					'label' => __( 'Image Background', 'pagelines' ),
+					'default'	=> ''
+				),
+				array(
+					'key'           => 'groupbg1',
+					'type'       => 'color',
+					'label' => __( 'Group 1 Background', 'pagelines' ),
+					'default'	=> ''
+				),
+				array(
+					'key'           => 'groupbg2',
+					'type'       => 'color',
+					'label' => __( 'Group 2 Background', 'pagelines' ),
+					'default'	=> '',
+					'ref'	=> __('Some meta fields are grouped (depends on template) .', 'pagelines')
+				)
+			)
+		);
+		$opts[] = array(
+			'key'	=> 'txt-colors',
+			'type' 	=> 	'multi',
+			'col'	=> 2,
+			'title' => __( 'Text Colors', 'pagelines' ),
+			'opts'	=> array(
+				array(
+					'key'           => 'title-color',
+					'type'          => 'color',
+					'label'    => __( 'People Title Color', 'pagelines' ),
+					 'default'	=> '',
+				),
+				array(
+					'key'           => 'content-color',
+					'type'          => 'color',
+					'label'    => __( 'Content Color', 'pagelines' ),
+					 'default'	=> '',
+				),
+				array(
+					'key'           => 'position-color',
+					'type'          => 'color',
+					'label'    => __( 'Position Color', 'pagelines' ),
+					 'default'	=> '',
+				),
+				array(
+					'key'           => 'company-color',
+					'type'          => 'color',
+					'label'    => __( 'Company Color', 'pagelines' ),
+					 'default'	=> '',
+				),
+				array(
+					'key'           => 'custom1-color',
+					'type'          => 'color',
+					'label'    => __( 'Custom Text 1 Color', 'pagelines' ),
+					 'default'	=> '',
+				),
+				array(
+					'key'           => 'custom2-color',
+					'type'          => 'color',
+					'label'    => __( 'Custom Text 2 Color', 'pagelines' ),
+					 'default'	=> '',
+				),
+				array(
+					'key'           => 'icon-color',
+					'type'          => 'color',
+					'label'    => __( 'Social Icons Color', 'pagelines' ),
+					 'default'	=> '',
+				),
+				array(
+					'key'           => 'iconhover-color',
+					'type'          => 'color',
+					'label'    => __( 'Social Icons Hover Color', 'pagelines' ),
+					 'default'	=> '',
+				)
 			)
 		);
 		return $opts;
@@ -458,9 +596,6 @@ class PeopleLud extends PageLinesSection {
 
 	//section persistent
 	function section_persistent(){
-		//add_action( 'template_redirect',array(&$this, 'people_lud_less') );
-		add_filter( 'pl_settings_array', array( &$this, 'get_meta_array' ) );
-		add_filter('pless_vars', array(&$this, 'add_less_vars'));
 		//set post
 		$this->post_type_setup();
 		if(!class_exists('RW_Meta_Box')) {
@@ -477,129 +612,6 @@ class PeopleLud extends PageLinesSection {
 		</div>';
 	}
 
-	/* site options metapanel */
-	function get_meta_array( $settings ){
-		$settings[ $this->id ] = array(
-				'name'  => $this->multiple_up.' Lud',
-				//'icon'  => $this->icon,
-				'opts'  => $this->sec_site_options(),
-		);
-		return $settings;
-	}
-
-	/* site options metapanel */
-	function sec_site_options(){
-		$options_array = array(
-			array(
-				'type' 	=> 	'multi',
-				'col'	=> 1,
-				'title' => __( 'Background Colors', 'pagelines' ),
-				'opts'	=> array(
-					array(
-						'key'           => $this->prefix.'-templatebg',
-						'type'       => 'color',
-						'label' => __( 'Container Background', 'pagelines' ),
-						'default'	=> '',
-					),
-					array(
-						'key'           => $this->prefix.'-singlebg',
-						'type'       => 'color',
-						'label' => __( 'Single '.$this->single_up.' Background', 'pagelines' ),
-						'default'	=> '',
-					),
-					array(
-						'key'           => $this->prefix.'-groupbg',
-						'type'       => 'color',
-						'label' => __( 'Group Background', 'pagelines' ),
-						'default'	=> '',
-						'ref'	=> __('Some meta fields are grouped (depends on template) - <br>
-								Usually, title and position.', 'pagelines')
-					),
-					array(
-						'key'           => $this->prefix.'-imgbg',
-						'type'       => 'color',
-						'label' => __( 'Image Background', 'pagelines' ),
-						'default'	=> ''
-					)
-				)
-			),
-			array(
-				'type' 	=> 	'multi',
-				'col'	=> 2,
-				'title' => __( 'Text Colors', 'pagelines' ),
-				'opts'	=> array(
-					array(
-						'key'           => $this->prefix.'-title-color',
-						'type'          => 'color',
-						'label'    => __( 'Name Color', 'pagelines' ),
-						'default'	=> pl_setting('text_primary'),
-					),
-					array(
-						'key'           => $this->prefix.'-position-color',
-						'type'          => 'color',
-						'label'    => __( 'Position Color', 'pagelines' ),
-						'default'	=> pl_setting('text_primary'),
-					),
-					array(
-						'key'           => $this->prefix.'-company-color',
-						'type'          => 'color',
-						'label'    => __( 'Company Color', 'pagelines' ),
-						'default'	=> pl_setting('text_primary'),
-					),
-					array(
-						'key'           => $this->prefix.'-content-color',
-						'type'          => 'color',
-						'label'    => __( 'Content Text Color', 'pagelines' ),
-						'default'	=> pl_setting('text_primary'),
-					),
-					array(
-						'key'           => $this->prefix.'-custom1-color',
-						'type'          => 'color',
-						'label'    => __( 'Custom Text 1 Color', 'pagelines' ),
-						'default'	=> pl_setting('text_primary'),
-					),
-					array(
-						'key'           => $this->prefix.'-custom2-color',
-						'type'          => 'color',
-						'label'    => __( 'Custom Text 2 Color', 'pagelines' ),
-						'default'	=> pl_setting('text_primary'),
-					),
-					array(
-						'key'           => $this->prefix.'-icon-color',
-						'type'       => 'color',
-						'label' => __( 'Icon Color', 'pagelines' ),
-						'default'	=> pl_setting('linkcolor'),
-					),
-					array(
-						'key'           => $this->prefix.'-iconhover-color',
-						'type'       => 'color',
-						'label' => __( 'Icon Hover Color', 'pagelines' ),
-						'default'	=> '#000',
-					)
-				)
-			)
-		);
-		return $options_array;
-	}
-
-	//add less vars
-	function add_less_vars($vars){
-		$vars[$this->prefix.'-templatebg'] 	=  ( pl_setting($this->prefix.'-templatebg')) 	? pl_hashify( pl_setting( $this->prefix.'-templatebg' ) ): 'transparent';
-		$vars[$this->prefix.'-singlebg'] 		= ( pl_setting($this->prefix.'-singlebg') ) 	? pl_hashify( pl_setting( $this->prefix.'-singlebg' ) ): 'transparent';
-		$vars[$this->prefix.'-groupbg'] 		= ( pl_setting($this->prefix.'-groupbg') ) 	? pl_hashify( pl_setting( $this->prefix.'-groupbg' ) ): 'transparent';
-		$vars[$this->prefix.'-imgbg'] 		= ( pl_setting($this->prefix.'-imgbg') ) 	? pl_hashify( pl_setting( $this->prefix.'-imgbg' ) ): 'transparent';
-		$vars[$this->prefix.'-title-color'] 		=  ( pl_setting($this->prefix.'-title-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-title-color' ) ): pl_setting('text_primary');
-		$vars[$this->prefix.'-position-color'] 	=  ( pl_setting($this->prefix.'-position-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-position-color' ) ): pl_setting('text_primary');
-		$vars[$this->prefix.'-company-color'] 	=  ( pl_setting($this->prefix.'-company-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-company-color' ) ): pl_setting('text_primary');
-		$vars[$this->prefix.'-content-color'] 	=  ( pl_setting($this->prefix.'-content-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-content-color' ) ): pl_setting('text_primary');
-		$vars[$this->prefix.'-custom1-color'] 	=  ( pl_setting($this->prefix.'-custom1-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-custom1-color' ) ): pl_setting('text_primary');
-		$vars[$this->prefix.'-custom2-color'] 	=  ( pl_setting($this->prefix.'-custom2-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-custom2-color' ) ): pl_setting('text_primary');
-		$vars[$this->prefix.'-icon-color'] 		=  ( pl_setting($this->prefix.'-icon-color') ) 	? pl_hashify( pl_setting( $this->prefix.'-icon-color' ) ):  pl_setting('linkcolor');
-		$vars[$this->prefix.'-iconhover-color']	=  (pl_setting($this->prefix.'-iconhover-color')) 	? pl_hashify(pl_setting($this->prefix.'-iconhover-color')): '#000';
-
-		return $vars;
-	}
-
 	//post meta - uses MetaBox plugin
 	function post_meta_setup(){
 		$type_meta_array = array(
@@ -609,10 +621,6 @@ class PeopleLud extends PageLinesSection {
 				'shortexp'     => __( 'Parameters', 'pagelines' ),
 				'exp'          => __( '<strong>Single '.$this->single_up.' Options</strong><br>Add '.$this->single_up.' Metadata that will be used on the page.<br><strong>HEADS UP:<strong> Each template uses different set of metadata. Check out <a href="http://bestrag.net/'.$this->multiple.'-lud" target="_blank">demo page</a> for more information.', 'pagelines' ),
 				'selectvalues' => array(
-					'name' => array(
-						'type'       => 'text',
-						'inputlabel' => __( $this->single_up.' (name of '.$this->single_up.' author)', 'pagelines' )
-					),
 					'position' => array(
 						'type'       => 'text',
 						'inputlabel' => __( $this->single_up.'\'s position in the company', 'pagelines' )
@@ -694,7 +702,7 @@ class PeopleLud extends PageLinesSection {
 			'singular_label'		=> __( $this->single_up, 'pagelines' ),
 			'description'		=> __( 'For creating '.$this->multiple.' items.', 'taxonomies' ),
 			'taxonomies'		=> array( $this->taxID ),
-			'menu_icon'		=> $this->icon,
+			'menu_icon'		=> 'dashicons-groups',
 			'public'			=> $public_pt,
 			'show_ui'		=> true,
 			'hierarchical'		=> true,
@@ -715,11 +723,10 @@ class PeopleLud extends PageLinesSection {
 		$columns = array(
 			'cb'		=> "<input type=\"checkbox\" />",
 			'title'		=> 'Title',
-			'client'		=> 'Client Name',
 			'description'	=> 'Description',
 			'media'		=> 'Media',
-			'client-company'	=> 'Client Company',
-			'client-web'	=> 'Client Web Page',
+			'company'=> 'Company',
+			'position'	=> 'Position',
 			$this->taxID	=> $this->single_up.' Sets',
 		);
 		$this->post_type = new PageLinesPostType( $this->multiple, $args, $taxonomies, $columns, array( &$this, 'column_display' ) );
@@ -733,9 +740,6 @@ class PeopleLud extends PageLinesSection {
 			array(
 				'title'		=>   'Isabella Turner',
 				'content'	=>   'I am a randomly generated user. Since we are using Lorem ipsum dolor sit amet, con se ctetur do lore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea. Give us a try!',
-				'name'		=>   'Isabella Turner',
-				'name_url'	=>   'http://bestrag.net',
-				'company_url'	=>   'http://www.pagelines.com',
 				'position'	=>   'Random User',
 				'company'	=>   'Bestrag',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
@@ -744,17 +748,14 @@ class PeopleLud extends PageLinesSection {
 				'demo'		=> true,
 				'facebook'	=> '#',
 				'twitter'		=> '#',
-				'google'		=> '#',
-				'linkedin'		=> '#',
+				'google'	=> '#',
+				'linkedin'	=> '#',
 				'github'		=> '#',
 				'instagram'	=> '#',
 			),
 			array(
 				'title'		=>   'Paul Sanders',
 				'content'	=>   'Since we are using Lorem ipsum dolor sit amet, I am a randomly generated user, con se ctetur adip is cing elit, sed do eiusmod tempor in cididunt ut labore et do lore magna aliqua. Ut enim ad minim veniam. Give us a try!',
-				'name'		=>   'Paul Sanders',
-				'name_url'	=>   'http://bestrag.net',
-				'company_url'	=>   'http://www.pagelines.com',
 				'position'	=>   'Random Man',
 				'company'	=>   'RandomR',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
@@ -763,17 +764,14 @@ class PeopleLud extends PageLinesSection {
 				'demo'		=> true,
 				'facebook'	=> '#',
 				'twitter'		=> '#',
-				'google'		=> '#',
-				'linkedin'		=> '#',
+				'google'	=> '#',
+				'linkedin'	=> '#',
 				'github'		=> '#',
 				'instagram'	=> '#',
 			),
 			array(
 				'title'		=>   'Evelyn Baker',
 				'content'	=>   ' I am a randomly generated user. Since we are using Lorem ipsum dolor sit amet, con se ctetur adip is cing elit, sed do eiusmod tempor in cididunt ut labore et do lore magna aliqua. Ut enim ad minim veniam. Give us a try! Since we are using Lorem ipsum. Give us a try!',
-				'name'		=>   'Evelyn Baker',
-				'name_url'	=>   'http://bestrag.net',
-				'company_url'	=>   'http://www.pagelines.com',
 				'position'	=>   'Random Position',
 				'company'	=>   'RandomCo',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
@@ -782,17 +780,14 @@ class PeopleLud extends PageLinesSection {
 				'demo'		=> true,
 				'facebook'	=> '#',
 				'twitter'		=> '#',
-				'google'		=> '#',
-				'linkedin'		=> '#',
+				'google'	=> '#',
+				'linkedin'	=> '#',
 				'github'		=> '#',
 				'instagram'	=> '#',
 			),
 			array(
 				'title'		=>   'Kenzi Allen',
 				'content'	=>   ' I am a randomly generated user. Since we are using Lorem ipsum dolor sit amet, con se ctetur adip is cing elit, sed do eiusmod tempor in cididunt ut labore et do lore magna aliqua. Ut enim ad minim veniam. Give us a try! Since we are using Lorem ipsum. Give us a try!',
-				'name'		=>   'Kenzi Allen',
-				'name_url'	=>   'http://bestrag.net',
-				'company_url'	=>   'http://www.pagelines.com',
 				'position'	=>   'Inspire Others',
 				'company'	=>   'iInspireCo',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
@@ -801,17 +796,14 @@ class PeopleLud extends PageLinesSection {
 				'demo'		=> true,
 				'facebook'	=> '#',
 				'twitter'		=> '#',
-				'google'		=> '#',
-				'linkedin'		=> '#',
+				'google'	=> '#',
+				'linkedin'	=> '#',
 				'github'		=> '#',
 				'instagram'	=> '#',
 			),
 			array(
 				'title'		=>   'Kim Jones',
 				'content'	=>   ' I am a randomly generated user. Since we are using Lorem ipsum dolor sit amet, con se ctetur adip is cing elit, sed do eiusmod tempor in cididunt ut labore et do lore magna aliqua. Ut enim ad minim veniam. Give us a try! Since we are using Lorem ipsum. Give us a try!',
-				'name'		=>   'Kim Jones',
-				'name_url'	=>   'http://bestrag.net',
-				'company_url'	=>   'http://www.pagelines.com',
 				'position'	=>   'Creative Position',
 				'company'	=>   'RandomCo',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
@@ -820,17 +812,14 @@ class PeopleLud extends PageLinesSection {
 				'demo'		=> true,
 				'facebook'	=> '#',
 				'twitter'		=> '#',
-				'google'		=> '#',
-				'linkedin'		=> '#',
+				'google'	=> '#',
+				'linkedin'	=> '#',
 				'github'		=> '#',
 				'instagram'	=> '#',
 			),
 			array(
 				'title'		=>   'Nathan Rodriquez',
 				'content'	=>   ' I am Nathan Rodriquez a randomly generated user. Since we are using Lorem ipsum dolor sit amet, con se ctetur adip is cing elit, sed do eiusmod tempor in cididunt ut labore et do lore magna aliqua. Ut enim ad minim veniam. Give us a try! Since we are using Lorem ipsum. Give us a try!',
-				'name'		=>   'Nathan Rodriquez',
-				'name_url'	=>   'http://bestrag.net',
-				'company_url'	=>   'http://www.pagelines.com',
 				'position'	=>   'iImagineCo',
 				'company'	=>   'ImagineCo',
 				'custom_text1'	=>   '[pl_button type="primary" size="default" link="mailto:#"]Email Me[/pl_button]',
@@ -839,8 +828,8 @@ class PeopleLud extends PageLinesSection {
 				'demo'		=> true,
 				'facebook'	=> '#',
 				'twitter'		=> '#',
-				'google'		=> '#',
-				'linkedin'		=> '#',
+				'google'	=> '#',
+				'linkedin'	=> '#',
 				'github'		=> '#',
 				'instagram'	=> '#',
 			)
@@ -876,10 +865,6 @@ class PeopleLud extends PageLinesSection {
 	function column_display( $column ) {
 		global $post;
 		switch ( $column ) {
-		case 'client':
-			if ( get_post_meta( $post->ID, 'name', true ) )
-				echo get_post_meta( $post->ID, 'name', true );
-			break;
 		case 'description':
 			echo the_excerpt();
 			break;
@@ -894,11 +879,11 @@ class PeopleLud extends PageLinesSection {
 				if ( $img ) echo wp_get_attachment_image($img, array(80, 80));
 			}
 			break;
-		case 'client-company':
+		case 'company':
 			if ( get_post_meta( $post->ID, 'company', true ) )
 				echo get_post_meta( $post->ID, 'company', true );
 			break;
-		case 'client-web':
+		case 'position':
 			if ( get_post_meta( $post->ID, 'position', true ) )
 				echo get_post_meta( $post->ID, 'position', true );
 			break;
@@ -911,21 +896,21 @@ class PeopleLud extends PageLinesSection {
 	function update_lud_settings($template){
 		$this->opt_update('opt_set_select', null, 'local');
 		$default = array(
-			'template_name' => null,
-			'taxonomy' => null,
-			'order' => null,
-			'orderby' => null,
-			'col_num' => null,
-			'slides_num' => null,
-			'slide_gutter' => null,
-			'equal_height' => null,
-			'text_italic' => null,
-			'text_bold' => null,
-			'text_font' => null,
-			'use_social' => null,
-			'social_icon_variant' => null,
-			'social_icon_size' => null,
-			'fluid' => null,
+			'template_name' => 0,
+			'taxonomy' => 0,
+			'order' => 0,
+			'orderby' => 0,
+			'col_num' => 0,
+			'slides_num' => 0,
+			'slide_gutter' => 0,
+			'equal_height' => 0,
+			'text_italic' => 0,
+			'text_bold' => 0,
+			'text_font' => 0,
+			'use_social' => 0,
+			'social_icon_variant' => 0,
+			'social_icon_size' => 0,
+			'fluid' => 0,
 			'opt_set_info' => $template
 		);
 		$clone_id = $this->meta['clone'];
@@ -935,16 +920,22 @@ class PeopleLud extends PageLinesSection {
 		$opts = wp_parse_args( $opts_json, $default );
 		foreach ($opts as $key => $value) {
 			$this->opt_update($key, $value, 'local');
-			$this->temp_meta[$clone_id][$key] = $value;
+			$this->meta['set'][$key] = $value;
 		}
-		if( !PL_LESS_DEV ) pl_flush_draft_caches();
 	}
 
-	//handle less template
-/*	function people_lud_less(){
-		$template	= (isset( $this->meta['set']['template_name'])) ? $this->meta['set']['template_name'] : $this->default_template;
-		$template_file 	= sprintf('%s/templates/%s.less', $this->base_dir, $template);
-		pagelines_insert_core_less( $template_file );
+	//update section specific colors - moved from global to local in ver. 1.2
+	function update_lud_colors(){
+		$global_colors = array('templatebg' => '', 'singlebg' => '', 'groupbg' => '', 'imgbg' => '', 'title-color' => pl_setting('text_primary'), 'content-color' => pl_setting('text_primary'), 'position-color' => pl_setting('text_primary'), 'company-color' => pl_setting('text_primary'), 'custom1-color' => pl_setting('text_primary'), 'custom2-color' => pl_setting('text_primary'), 'icon-color' => pl_setting('linkcolor'), 'iconhover-color' => '#000');
+		foreach ($global_colors as $key => $value) {
+			$global_color = pl_setting($this->prefix.'-'.$key);
+			if($global_color && $global_color !== $value){
+				$group_num = ($key === 'groupbg') ? '1' :  '';
+				$this->opt_update($key.$group_num, $global_color, 'local');
+				$this->meta['set'][$key] = $global_color;
+				pl_setting_update($this->prefix.'-'.$key);
+			}
+		}
 	}
-*/
+
 }//EOC

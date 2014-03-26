@@ -54,4 +54,7 @@ form[data-sid="people-lud"] textarea, form[data-scope="people-lud"] textarea{mar
 form[data-sid="people-lud"] #master_template_settings.opt, form[data-sid="people-lud"] #master_template_settings.opt{background: #017EB9 !important;}
 form[data-sid="people-lud"] .check-standard, form[data-scope="people-lud"] .check-standard{display: block !important;}
 form[data-sid="people-lud"] .check-flip, form[data-scope="people-lud"] .check-flip{display: none !important;}
-label[for="opt_set_info"],input[id="opt_set_info"],label[for="grid_selector"],select[id="grid_selector"]{display:none !important;}
+label[for="opt_set_info"],input[id="opt_set_info"],label[for="grid_selector"],select[id="grid_selector"], div.checkgroup-fluid{display:none !important;}
+form[data-sid="people-lud"] #pl_section_styling label{color: black !important;}
+form[data-sid="people-lud"] #pl_section_styling, form[data-sid="people-lud"] #bg_colors, form[data-sid="people-lud"] #txt-colors, form[data-sid="people-lud"] #controls-colors{background: whitesmoke !important; /*border: 1px solid lightgray !important;*/ }
+form[data-sid="people-lud"] #pl_section_styling label, form[data-sid="people-lud"] #bg_colors label, form[data-sid="people-lud"] #txt-colors label, form[data-sid="people-lud"] #controls-colors label{color: black !important; }
